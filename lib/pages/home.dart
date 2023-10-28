@@ -1,19 +1,27 @@
 import 'package:fitness/model/category_model.dart';
 import 'package:fitness/model/diet_model.dart';
+import 'package:fitness/widgets/button_widget.dart';
+import 'package:fitness/widgets/dialog_box.dart';
+import 'package:fitness/widgets/diet_widget.dart';
 import 'package:flutter/material.dart';
-// ignore: depend_on_referenced_packages
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key});
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
+  final _levelController = TextEditingController();
+  final _calorieController = TextEditingController();
+  final _durationController = TextEditingController();
+  final _dishController = TextEditingController();
+
   List<CategoryModel> categories = [];
   List<DietModel> diet = [];
+  List<DietModel> newDiet = [];
 
   void _getCategories() {
     categories = CategoryModel.getCategoryList();
@@ -23,12 +31,53 @@ class _HomePageState extends State<HomePage> {
     diet = DietModel.getDietList();
   }
 
+  void saveNewDish() {
+    setState(() {
+      newDiet.add(DietModel(
+          name: _dishController.text,
+          iconPath: "assets/icons/blueberry-pancake.svg",
+          duration: _durationController.text,
+          calorie: _calorieController.text,
+          level: _levelController.text,
+          isViewSelected: false));
+      _dishController.clear();
+      _calorieController.clear();
+      _levelController.clear();
+      _durationController.clear();
+    });
+    Navigator.of(context).pop();
+  }
+
+  void createNewTask() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AddNewTaskDialog(
+            levelController: _levelController,
+            calorieController: _calorieController,
+            dishController: _dishController,
+            durationController: _durationController,
+            onCancel: () => Navigator.of(context).pop(),
+            onSave: saveNewDish,
+          );
+        });
+  }
+
+  // @override
+  // void initState() {
+  //   _getCategories();
+  //   _getDietList();
+  //   super.initState();
+  // }
+
   @override
   Widget build(BuildContext context) {
     _getCategories();
     _getDietList();
     return Scaffold(
         appBar: fitnessAppBar(),
+        floatingActionButton: FloatingActionButton(
+            child: const Icon(Icons.add), onPressed: () => createNewTask()),
         body: ListView(
           children: [
             _searchTextField(),
@@ -44,6 +93,52 @@ class _HomePageState extends State<HomePage> {
               height: 20,
             ),
             _popularSection(),
+            const SizedBox(
+              height: 20,
+            ),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "New Dish",
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  newDiet.isEmpty
+                      ? Container(
+                          child: Column(
+                            children: [
+                              Image.asset(
+                                "assets/images/ic_empty.png",
+                              ),
+                              const Text(
+                                "No New Dish has been added",
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.w300),
+                              ),
+                              const SizedBox(
+                                height: 10,
+                              ),
+                              MyButton(
+                                  text: "Add New Dish",
+                                  onPressed: () => createNewTask())
+                            ],
+                          ),
+                        )
+                      : DietWidget(
+                          diet: newDiet,
+                          itemCount: newDiet.length,
+                        )
+                ],
+              ),
+            )
           ],
         ));
   }
@@ -62,78 +157,10 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(
             height: 10,
           ),
-          SizedBox(
-            width: 180,
-            child: ListView.separated(
-                scrollDirection: Axis.vertical,
-                itemBuilder: (context, index) {
-                  return Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                        color: index % 2 == 0
-                            ? Colors.blue.withOpacity(0.11)
-                            : Colors.green.withOpacity(0.11),
-                        borderRadius: BorderRadius.circular(8)),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: const BoxDecoration(
-                              shape: BoxShape.circle, color: Colors.white),
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: SvgPicture.asset(diet[index].iconPath),
-                          ),
-                        ),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              diet[index].name,
-                              style: const TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500),
-                            ),
-                            Text(
-                              "${diet[index].level} | ${diet[index].duration} | ${diet[index].calorie}",
-                              style: TextStyle(
-                                  color: Colors.black.withOpacity(0.8),
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w300),
-                            )
-                          ],
-                        ),
-                        Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: LinearGradient(colors: [
-                              diet[index].isViewSelected
-                                  ? Colors.transparent
-                                  : Colors.blue.withOpacity(0.2),
-                              diet[index].isViewSelected
-                                  ? Colors.transparent
-                                  : Colors.blue.withOpacity(0.8)
-                            ]),
-                          ),
-                          child: const Center(
-                              child: Icon(Icons.keyboard_arrow_right)),
-                        )
-                      ],
-                    ),
-                  );
-                },
-                separatorBuilder: (context, index) {
-                  return const SizedBox(
-                    height: 20,
-                  );
-                },
-                itemCount: diet.length),
-          )
+          DietWidget(
+            diet: diet,
+            itemCount: diet.length,
+          ),
         ],
       ),
     );
