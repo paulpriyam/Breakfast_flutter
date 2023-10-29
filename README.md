@@ -67,3 +67,5 @@ It will generate the diet_modal.g.dart
 [Add Hive to Flutter Project and basic CRUD operations](https://medium.com/codex/hive-in-flutter-7a2b320eb1dc)
 
 ### Images
+![Image 1](assets/sample/sample1.jpg)
+![Image 2](assets/sample/sample2.jpg)
