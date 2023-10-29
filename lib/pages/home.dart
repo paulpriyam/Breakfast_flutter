@@ -1,3 +1,4 @@
+import 'package:fitness/database/database.dart';
 import 'package:fitness/model/category_model.dart';
 import 'package:fitness/model/diet_model.dart';
 import 'package:fitness/widgets/button_widget.dart';
@@ -5,6 +6,7 @@ import 'package:fitness/widgets/dialog_box.dart';
 import 'package:fitness/widgets/diet_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,7 +23,7 @@ class _HomePageState extends State<HomePage> {
 
   List<CategoryModel> categories = [];
   List<DietModel> diet = [];
-  List<DietModel> newDiet = [];
+  DietDatabase db = DietDatabase();
 
   void _getCategories() {
     categories = CategoryModel.getCategoryList();
@@ -33,17 +35,19 @@ class _HomePageState extends State<HomePage> {
 
   void saveNewDish() {
     setState(() {
-      newDiet.add(DietModel(
+      var data = DietModel(
           name: _dishController.text,
           iconPath: "assets/icons/blueberry-pancake.svg",
           duration: _durationController.text,
           calorie: _calorieController.text,
           level: _levelController.text,
-          isViewSelected: false));
+          isViewSelected: false);
+      db.addDietdata(data);
       _dishController.clear();
       _calorieController.clear();
       _levelController.clear();
       _durationController.clear();
+      db.getAllDietData();
     });
     Navigator.of(context).pop();
   }
@@ -63,17 +67,16 @@ class _HomePageState extends State<HomePage> {
         });
   }
 
-  // @override
-  // void initState() {
-  //   _getCategories();
-  //   _getDietList();
-  //   super.initState();
-  // }
+  @override
+  void initState() {
+    _getCategories();
+    _getDietList();
+    db.getAllDietData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    _getCategories();
-    _getDietList();
     return Scaffold(
         appBar: fitnessAppBar(),
         floatingActionButton: FloatingActionButton(
@@ -111,7 +114,7 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(
                     height: 10,
                   ),
-                  newDiet.isEmpty
+                  db.newDiet.isEmpty
                       ? Container(
                           child: Column(
                             children: [
@@ -133,8 +136,8 @@ class _HomePageState extends State<HomePage> {
                           ),
                         )
                       : DietWidget(
-                          diet: newDiet,
-                          itemCount: newDiet.length,
+                          diet: db.newDiet,
+                          itemCount: db.newDiet.length,
                         )
                 ],
               ),

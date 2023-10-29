@@ -1,9 +1,20 @@
-class DietModel {
+import 'package:hive_flutter/hive_flutter.dart';
+
+part 'diet_model.g.dart';
+
+@HiveType(typeId: 1)
+class DietModel extends HiveObject {
+  @HiveField(0)
   String name;
+  @HiveField(1)
   String iconPath;
+  @HiveField(2)
   String duration;
+  @HiveField(3)
   String level;
+  @HiveField(4)
   String calorie;
+  @HiveField(5)
   bool isViewSelected;
 
   DietModel(
