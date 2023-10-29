@@ -52,17 +52,42 @@ class _HomePageState extends State<HomePage> {
     Navigator.of(context).pop();
   }
 
-  void createNewTask() {
+  void updateDish(int? index) {
+    setState(() {
+      if (index != null) {
+        var data = DietModel(
+            name: _dishController.text,
+            iconPath: "assets/icons/blueberry-pancake.svg",
+            duration: _durationController.text,
+            calorie: _calorieController.text,
+            level: _levelController.text,
+            isViewSelected: false);
+        db.updateDietAtIndex(index, data);
+        _dishController.clear();
+        _calorieController.clear();
+        _levelController.clear();
+        _durationController.clear();
+        db.getAllDietData();
+      }
+    });
+    Navigator.of(context).pop();
+  }
+
+  void createNewTask(int? index) {
     showDialog(
         context: context,
         builder: (context) {
           return AddNewTaskDialog(
+            selectedIndex: index,
             levelController: _levelController,
             calorieController: _calorieController,
             dishController: _dishController,
             durationController: _durationController,
             onCancel: () => Navigator.of(context).pop(),
             onSave: saveNewDish,
+            onUpdate: () {
+              updateDish(index);
+            },
           );
         });
   }
@@ -80,7 +105,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
         appBar: fitnessAppBar(),
         floatingActionButton: FloatingActionButton(
-            child: const Icon(Icons.add), onPressed: () => createNewTask()),
+            child: const Icon(Icons.add), onPressed: () => createNewTask(null)),
         body: ListView(
           children: [
             _searchTextField(),
@@ -99,51 +124,57 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(
               height: 20,
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "New Dish",
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black),
-                  ),
-                  const SizedBox(
-                    height: 10,
-                  ),
-                  db.newDiet.isEmpty
-                      ? Container(
-                          child: Column(
-                            children: [
-                              Image.asset(
-                                "assets/images/ic_empty.png",
-                              ),
-                              const Text(
-                                "No New Dish has been added",
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w300),
-                              ),
-                              const SizedBox(
-                                height: 10,
-                              ),
-                              MyButton(
-                                  text: "Add New Dish",
-                                  onPressed: () => createNewTask())
-                            ],
-                          ),
-                        )
-                      : DietWidget(
-                          diet: db.newDiet,
-                          itemCount: db.newDiet.length,
-                        )
-                ],
-              ),
-            )
+            _userAddedDishSection()
           ],
         ));
+  }
+
+  Container _userAddedDishSection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "New Dish",
+            style: TextStyle(
+                fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+          ),
+          const SizedBox(
+            height: 10,
+          ),
+          db.newDiet.isEmpty
+              ? Container(
+                  margin: const EdgeInsets.all(8),
+                  child: Column(
+                    children: [
+                      Image.asset(
+                        "assets/images/ic_empty.png",
+                      ),
+                      const Text(
+                        "No New Dish has been added",
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w300),
+                      ),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      MyButton(
+                          text: "Add New Dish",
+                          onPressed: () => createNewTask(null))
+                    ],
+                  ),
+                )
+              : DietWidget(
+                  diet: db.newDiet,
+                  itemCount: db.newDiet.length,
+                  onIndexSelected: (index) {
+                    createNewTask(index);
+                  },
+                )
+        ],
+      ),
+    );
   }
 
   Container _popularSection() {
@@ -163,6 +194,9 @@ class _HomePageState extends State<HomePage> {
           DietWidget(
             diet: diet,
             itemCount: diet.length,
+            onIndexSelected: (index) {
+              // no action is needed
+            },
           ),
         ],
       ),

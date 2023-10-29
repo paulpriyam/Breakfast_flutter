@@ -15,7 +15,7 @@ void main() async {
   Hive.registerAdapter(DietModelAdapter());
 
   //open a box
-  await Hive.openBox(Constants.HIVE_BOX);
+  await Hive.openBox<DietModel>(Constants.HIVE_BOX);
   runApp(const MyApp());
 }
 
